@@ -4,6 +4,8 @@ import com.pm.patientservice.dto.PatientRequestDTO;
 import com.pm.patientservice.dto.PatientResponseDTO;
 import com.pm.patientservice.dto.validators.CreatePatientValidationGroup;
 import com.pm.patientservice.service.PatientService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/patients") //   http://localhost:4000/patients
+@Tag(name = "Patient", description = "APIs for managing patients")
 public class PatientController {
 
     private final PatientService patientService;
@@ -24,12 +27,14 @@ public class PatientController {
     }
 
     @GetMapping
+    @Operation(summary = "Get Patients")
     public ResponseEntity<List<PatientResponseDTO>> getPatients() {
         List<PatientResponseDTO> patients = patientService.getPatients();
         return ResponseEntity.ok().body(patients);
     }
 
     @PostMapping
+    @Operation(summary = "Create a new Patient")
     public ResponseEntity<PatientResponseDTO> createPatient(
             @Validated({Default.class, CreatePatientValidationGroup.class})
             @RequestBody PatientRequestDTO patientRequestDTO) {
@@ -40,6 +45,7 @@ public class PatientController {
     }
 
     @PutMapping("/{id}") // http://localhost:4000/patients/123e4567-e89b-12d3-a456-426614174000
+    @Operation(summary = "Update an existing Patient")
     public ResponseEntity<PatientResponseDTO> updatePatient(
             @PathVariable UUID id,
             @Validated(Default.class) @RequestBody PatientRequestDTO patientRequestDTO) {
@@ -48,6 +54,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/{id}") // http://localhost:4000/patients/123e4567-e89b-12d3-a456-426614174000
+    @Operation(summary = "Delete a Patient")
     public ResponseEntity<Void> deletePatient(@PathVariable UUID id) {
         patientService.deletePatient(id);
         return ResponseEntity.noContent().build();
