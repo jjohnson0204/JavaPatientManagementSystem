@@ -4,6 +4,7 @@ import com.pm.patientservice.dto.PatientRequestDTO;
 import com.pm.patientservice.dto.PatientResponseDTO;
 import com.pm.patientservice.exception.EmailAlreadyExistsException;
 import com.pm.patientservice.exception.PatientNotFoundException;
+import com.pm.patientservice.grpc.BillingServiceGrpcClient;
 import com.pm.patientservice.mapper.PatientMapper;
 import com.pm.patientservice.model.Patient;
 import com.pm.patientservice.repository.PatientRepository;
@@ -17,10 +18,12 @@ import java.util.UUID;
 // Business logic and dto request
 @Service
 public class PatientService {
-    @Autowired
-    private PatientRepository patientRepository;
 
-    public PatientService(PatientRepository patientRepository) {
+    private final PatientRepository patientRepository;
+    private final BillingServiceGrpcClient billingServiceGrpcClient;
+
+    public PatientService(PatientRepository patientRepository, BillingServiceGrpcClient billingServiceGrpcClient) {
+        this.billingServiceGrpcClient = billingServiceGrpcClient;
         this.patientRepository = patientRepository;
     }
 
@@ -35,6 +38,8 @@ public class PatientService {
             throw new EmailAlreadyExistsException("Email already exists for this patient: " + patientRequestDTO.getEmail());
         }
         Patient newPatient = patientRepository.save(PatientMapper.toModel(patientRequestDTO));
+
+        billingServiceGrpcClient.createBillingAccount(newPatient.getId().toString(), newPatient.getName(), newPatient.getEmail());
 
         return PatientMapper.toDTO(newPatient);
     }
@@ -61,9 +66,6 @@ public class PatientService {
     }
 
     public void deletePatient(UUID id) {
-        /*if (!patientRepository.existsById(id)) {
-            throw new PatientNotFoundException("Patient not found with id: " + id);
-        }*/
         patientRepository.deleteById(id);
     }
 }
